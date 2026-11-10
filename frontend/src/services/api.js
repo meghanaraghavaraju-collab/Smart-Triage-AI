@@ -1,12 +1,19 @@
-const API_BASE = 'http://127.0.0.1:5000/api';
+
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  'http://127.0.0.1:5000/api';
 
 export const api = {
   // Patients
   async getPatients(search = '') {
     try {
-      const url = search ? `${API_BASE}/patients?search=${encodeURIComponent(search)}` : `${API_BASE}/patients`;
+      const url = search
+        ? `${API_BASE}/patients?search=${encodeURIComponent(search)}`
+        : `${API_BASE}/patients`;
+
       const res = await fetch(url);
       if (!res.ok) throw new Error('Failed to fetch patients list');
+
       const data = await res.json();
       return data.data;
     } catch (e) {
@@ -19,6 +26,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/patients/${id}`);
       if (!res.ok) throw new Error('Failed to fetch patient');
+
       const data = await res.json();
       return data.data;
     } catch (e) {
@@ -30,10 +38,17 @@ export const api = {
   // Triage & Assessment
   async getTriageQueue(filter = {}) {
     try {
-      let query = '';
-      if (filter.riskLevel) query += `?riskLevel=${filter.riskLevel}`;
+      const params = new URLSearchParams();
+
+      if (filter.riskLevel) {
+        params.set('riskLevel', filter.riskLevel);
+      }
+
+      const query = params.toString() ? `?${params}` : '';
       const res = await fetch(`${API_BASE}/triage/queue${query}`);
+
       if (!res.ok) throw new Error('Failed to fetch triage queue');
+
       const data = await res.json();
       return data.data;
     } catch (e) {
@@ -48,10 +63,17 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(assessmentPayload),
     });
+
     const data = await res.json();
+
     if (!res.ok) {
-      throw new Error(data.message || data.errors?.join(', ') || 'Failed to submit triage assessment');
+      throw new Error(
+        data.message ||
+        data.errors?.join(', ') ||
+        'Failed to submit triage assessment'
+      );
     }
+
     return data.data;
   },
 
@@ -62,7 +84,9 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ department }),
       });
+
       if (!res.ok) throw new Error('Dispatch failed');
+
       return await res.json();
     } catch (e) {
       console.warn('[API Fallback] Using local dispatch update:', e.message);
@@ -75,6 +99,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/departments`);
       if (!res.ok) throw new Error('Failed to fetch departments');
+
       const data = await res.json();
       return data.data;
     } catch (e) {
@@ -88,6 +113,7 @@ export const api = {
     try {
       const res = await fetch(`${API_BASE}/analytics/overview`);
       if (!res.ok) throw new Error('Failed to fetch analytics');
+
       const data = await res.json();
       return data.data;
     } catch (e) {
@@ -103,6 +129,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(credentials),
     });
+
     return await res.json();
   },
 
@@ -112,6 +139,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(userData),
     });
+
     return await res.json();
   }
 };
